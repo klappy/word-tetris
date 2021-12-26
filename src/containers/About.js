@@ -24,6 +24,7 @@ export default class About extends Component {
         return (
             <div className={css(styles.container)}>
                 <h3>{`Score : ${this.props.score}`}</h3>
+                <h3>Words: {this.props.wordBank.join(', ')}</h3>
                 <h3>{`High Score: ${getHighScore()}`}</h3>
 
                 <h4>How To play?</h4>

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { StyleSheet, css } from 'aphrodite';
 
 import Block from './Block'
-import { numberOfRow } from '../config/config'
+import { numberOfRows } from '../config/config'
 
 const styles = StyleSheet.create({
     container: {
@@ -19,7 +19,7 @@ export default class BlockColumn extends Component {
         const { letters } = this.props;
         if (letters) {
             for (let i = 0; i < letters.length; i++) {
-                if (letters[i].pos.y == bId) {
+                if (letters[i].pos.y === bId) {
                     return letters[i]
                 }
             }
@@ -31,7 +31,7 @@ export default class BlockColumn extends Component {
 
     _getBlocks = () => {
         let blocks = []
-        for (let i = 0; i < numberOfRow; i++) {
+        for (let i = 0; i < numberOfRows; i++) {
             const _letterOnBlock = this.getLetterOnBlock(i)
             blocks.push(
                 <Block
