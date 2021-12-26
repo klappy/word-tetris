@@ -1,6 +1,6 @@
 import { GAMESTATE } from "../config/gameState";
 
-export const  moveLetters = ({letters, alreadyHasLetterInPos, numberOfRows, score, saveHighScore, gameInterval, onGameState, toggleUpdateFlag, generateLetter}) => {
+export const  moveLetters = ({letters, alreadyHasLetterInPos, numberOfRows, score, saveHighScore, gameInterval, onGameState, generateLetter}) => {
   let updatedSomething = false
   for (let i = 0; i < letters.length; i++) {
     if (letters[i].pos.y < numberOfRows - 1 && letters[i].moving) {
@@ -15,16 +15,15 @@ export const  moveLetters = ({letters, alreadyHasLetterInPos, numberOfRows, scor
         letters = [];
         clearInterval(gameInterval)
         onGameState(GAMESTATE.ENDED);
-        toggleUpdateFlag();
       };
       updatedSomething = true;
     };
   };
-  if (updatedSomething) {
-    //console.log(this.state.letters, " vs ", updated)
-    toggleUpdateFlag();
-  } else {
+  if (!updatedSomething) {
     // this._checkPossibleWords();
     generateLetter();
+    debugger
+  } else {
+    //console.log(this.state.letters, " vs ", updated)
   };
 };

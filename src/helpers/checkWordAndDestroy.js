@@ -2,7 +2,7 @@ import { sortWordQueue } from "../config/wordCheck";
 import { scoreForThisWord } from "../config/SaveScore";
 import { checkWord } from "./randomWords";
 
-export const checkWordAndDestroy = ({letters, wordQueue, toggleUpdateFlag, score, updateScore, wordBank}) => {
+export const checkWordAndDestroy = ({letters, wordQueue, score, updateScore, wordBank}) => {
   if (wordQueue.length > 0) {
     wordQueue = sortWordQueue(wordQueue);
     //check its proper selected // in sequence
@@ -38,7 +38,6 @@ export const checkWordAndDestroy = ({letters, wordQueue, toggleUpdateFlag, score
     };
     wordQueue = [];
     letters = letters.map(l => ({...l, isWord: false}));
-    toggleUpdateFlag();
   };
   return { wordQueue, letters };
 };
