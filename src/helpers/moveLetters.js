@@ -1,30 +1,37 @@
 import { GAMESTATE } from "../config/gameState";
 
-export const  moveLetters = ({letters, alreadyHasLetterInPos, numberOfRows, score, saveHighScore, gameInterval, onGameState, toggleUpdateFlag, generateLetter}) => {
-  let updatedSomething = false
-  for (let i = 0; i < letters.length; i++) {
-    if (letters[i].pos.y < numberOfRows - 1 && letters[i].moving) {
-      const alreadyHas = alreadyHasLetterInPos({ x: letters[i].pos.x, y: letters[i].pos.y + 1 })
-      if (!alreadyHas) letters[i].pos.y = letters[i].pos.y + 1;
-      if (letters[i].pos.y === numberOfRows - 1 || alreadyHas) {
-        letters[i].moving = false;
+export const moveLetters = ({
+  onTick,
+  letters: _letters,
+  onLetters,
+  alreadyHasLetterInPos,
+  numberOfRows,
+  useNextLetter,
+  endGame,
+  verbose,
+}) => {
+  let letters = [..._letters];
+  let moved = false;
+
+  letters = letters.map(_letter => {
+    let letter = {..._letter};
+    if (letter.moving && letter.pos.y < numberOfRows - 1) {
+      const { x, y } = letter.pos;
+      const occupied = alreadyHasLetterInPos({ x, y: y + 1 });
+      if (!occupied) letter.pos.y = y + 1;
+      if (occupied || letter.pos.y === numberOfRows - 1) letter.moving = false;
+      if (letter.pos.y === 0) { 
+        // can't move, game over
+        endGame();
       };
-      if (letters[i].pos.y === 0) {
-        // so basically one column is full Game over
-        saveHighScore(score)
-        letters = [];
-        clearInterval(gameInterval)
-        onGameState(GAMESTATE.ENDED);
-        toggleUpdateFlag();
-      };
-      updatedSomething = true;
+      moved = true;
     };
-  };
-  if (updatedSomething) {
-    //console.log(this.state.letters, " vs ", updated)
-    toggleUpdateFlag();
-  } else {
-    // this._checkPossibleWords();
-    generateLetter();
-  };
+    return letter;
+  });
+
+  if (verbose) console.log('moveLetters() => moved: ', moved);
+  if (moved) onLetters(letters);
+  else useNextLetter();
+
+  onTick();
 };

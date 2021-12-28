@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDeepCompareCallback } from 'use-deep-compare';
 import { css } from 'aphrodite';
 
 import Button from '@material-ui/core/Button';
@@ -6,236 +7,138 @@ import LeftIcon from '@material-ui/icons/ArrowBack';
 import RightIcon from '@material-ui/icons/ArrowForward';
 import DownIcon from '@material-ui/icons/ArrowDownward';
 
-
 import BlockColumn from './Column'
 import { noOfColumns, numberOfRows, moveTime, checkWordTime } from '../config/config'
 import { saveHighScore, getHighScore } from '../config/SaveScore';
 import GameOver from './GameOver';
 import About from './About';
-import { checkWord, randomEnglishWordsOfLength } from '../helpers/randomWords';
-import { randomCharacterFromWords } from '../helpers/randomCharacter';
+
+import { randomEnglishWordsOfLength } from '../helpers/randomWords';
 import { gameStylesheet } from '../helpers/gameStylesheet';
-import { onKeyPress } from '../helpers/keypress';
-import { moveLetters } from '../helpers/moveLetters';
+import { moveDown, moveLeft, moveRight } from '../helpers/keypress';
 
 import { GAMESTATE } from '../config/gameState';
-import { checkWordAndDestroy } from '../helpers/checkWordAndDestroy';
+import useLetters from '../hooks/useLetters';
 
 const styles = gameStylesheet;
 
-const wordBank = randomEnglishWordsOfLength({count: 1, minLength: 3, maxLength: 3});
+function Game () {
+  const initialState = {
+    score: 0,
+    status: GAMESTATE.INITIAL,
+    wordBank: randomEnglishWordsOfLength({count: 1, minLength: 3, maxLength: 3}),
+  };
+  const [state, setState] = useState(initialState);
+  const [tick, setTick] = useState(false);
+  const [gameInterval, setGameInterval] = useState();
+  
+  const updateScore = (score) => { setState({ ...state, score }); };
 
-class Game extends Component {
-    nextLetter = undefined;
-    letters = [];
-    wordQueue = [];
-    gameState = GAMESTATE.INITIAL;
-    checkWordAutomatic;
-    state = {
-        updateFlag: false,
-        score: 0
+  const endGame = () => { setState({ ...state, status: GAMESTATE.ENDED }); };
+
+  const onTick = () => { setTick(false); };
+
+  const {
+    letters,
+    clearLetters,
+    nextLetter,
+    useNextLetter,
+    wordQueue,
+    getLettersForColumn,
+    checkWordAndDestroy,
+    onLetterClick,
+  } = useLetters({
+    wordBank: state.wordBank,
+    tick,
+    onTick,
+    noOfColumns,
+    numberOfRows,
+    score: state.score,
+    updateScore,
+    endGame,
+    checkWordTime,
+    verbose: true,
+  });
+
+  useEffect(() => {
+    if (state.status === GAMESTATE.ENDED) {
+      saveHighScore(score);
+      clearInterval(gameInterval);
+      clearLetters();
     };
+  }, [state.status]);
+
+  const startMoving = useCallback(() => {
+    clearInterval(gameInterval);
+    const _gameInterval = setInterval(() => { setTick(true); }, moveTime);
+    setGameInterval(_gameInterval);
+  }, [gameInterval, moveTime]);
+
+  const startGame = useDeepCompareCallback(() => {
+    let score = (state.status !== GAMESTATE.PAUSED) ? 0 : state.score;
+    let status = GAMESTATE.IN_PROGRESS;
+    if (letters.length === 0) useNextLetter();
+    setState({ ...state, score, status });
+    startMoving();
+  }, [state, startMoving, useNextLetter]);
     
-    componentDidMount() {
-        window.addEventListener("keydown", this._onKeyPress);
-    }
-
-    _onKeyPress = (evt) => {
-        onKeyPress({
-            evt,
-            letters: this.letters,
-            toggleUpdateFlag: this.toggleUpdateFlag,
-            alreadyHasLetterInPos: this._alreadyHasLetterInPos,
-            noOfColumns,
-            numberOfRows,
-        });
+  const pauseGame = () => {
+    const status = GAMESTATE.PAUSED;
+    clearInterval(gameInterval);
+    saveHighScore(state.score); //just save
+    setState({ ...state, status });
+  };
+  
+  const getColumns = useDeepCompareCallback(() => {
+    let columns = [];
+    for (let i = 0; i < noOfColumns; i++) {
+      const colLetters = getLettersForColumn(i);
+      columns.push(
+        <BlockColumn
+          key={`column${i}`}
+          columnId={i}
+          letters={colLetters}
+          onLetterClick={onLetterClick}
+        />
+      );
     };
+    return columns;
+  }, [noOfColumns, getLettersForColumn, onLetterClick]);
 
-    updateScore = (score) => {
-        this.setState({
-            updateFlag: !this.state.updateFlag,
-            score,
-        });
-    };
+  const scoreComponent = (
+    <div className={css(styles.scoreLine)}>
+      <div className={css(styles.score)}> {`Best : ${getHighScore()}`} </div>
+      <div className={css(styles.score)}> {`Score : ${state.score}`} </div>
+      {nextLetter?.character && <div className={css(styles.score)}> {`Next : ${nextLetter?.character.toUpperCase()}`} </div>}
+    </div>
+  );
+  const boardComponent = (
+    <>
+      {state.status !== GAMESTATE.ENDED && <div className={css(styles.gameContainer)}>{getColumns()}</div>}
+      {state.status === GAMESTATE.ENDED && <GameOver score={state.score} />}
+    </>
+  );
+  const controlsComponent = (
+    <div className={css(styles.controlContainer)}>
+      {state.status !== GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={startGame}> {letters.length > 0 ? "Resume" : "Start"}</Button>}
+      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={pauseGame}> Pause</Button>}
+      {wordQueue.length > 0 && <Button variant="contained" size="small" color="primary" className={css([styles.buttons, styles.destroyColor])} onClick={checkWordAndDestroy}> Destroy</Button>}
+      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={moveLeft}><LeftIcon /></Button>}
+      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={moveDown}><DownIcon /></Button>}
+      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={moveRight}><RightIcon /></Button>}
+    </div>
+  );
+  const aboutComponent = (<About score={state.score} wordBank={state.wordBank} />);
+  
+  return (
+    <div className={css(styles.container)} >
+      {scoreComponent}
+      {boardComponent}
+      {controlsComponent}
+      {aboutComponent}
+    </div>
+  );
+};
 
-    toggleUpdateFlag = (score) => {
-        this.setState({
-            updateFlag: !this.state.updateFlag,
-        });
-    };
-
-
-    _startGame = () => {
-        if (this.gameState !== GAMESTATE.PAUSED)
-            this.setState({ score: 0 })
-        this.gameState = GAMESTATE.IN_PROGRESS;
-        if (this.letters.length === 0) {
-            this.generateLetter();
-        }
-        setTimeout(this.startMoving, moveTime);
-    }
-
-    _pauseGame = () => {
-        this.gameState = GAMESTATE.PAUSED;
-        clearInterval(this.gameInterval)
-        saveHighScore(this.state.score) //just save
-        this.setState({ updateFlag: !this.state.updateFlag })
-    }
-
-    startMoving = () => {
-        clearInterval(this.gameInterval)
-        this.gameInterval = setInterval(this._moveLetters, moveTime);
-    }
-
-    _alreadyHasLetterInPos = (pos) => {
-        for (let i = 0; i < this.letters.length; i++) {
-            if (this.letters[i].pos.x === pos.x && this.letters[i].pos.y === pos.y) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    _setGameState = (gameState) => {
-        this.gameState = gameState;
-    };
-
-    _moveLetters = () => {
-        moveLetters({
-            letters: this.letters,
-            alreadyHasLetterInPos: this._alreadyHasLetterInPos,
-            score: this.state.score,
-            gameInterval: this.gameInterval,
-            onGameState: this._setGameState,
-            toggleUpdateFlag: this.toggleUpdateFlag,
-            generateLetter: this.generateLetter,
-            numberOfRows,
-            saveHighScore,
-        });
-    };
-
-    _getNewLetter = () => {
-        let _newLetter;
-        if (this.nextLetter) {
-            _newLetter = this.nextLetter;
-            this.nextLetter = randomCharacterFromWords({words: wordBank});
-        } else {
-            _newLetter = randomCharacterFromWords({words: wordBank});
-            this.nextLetter = randomCharacterFromWords({words: wordBank});
-        }
-        return _newLetter;
-    }
-
-    generateLetter = () => {
-        const letter = this._getNewLetter();
-        const columnno = Math.floor(Math.random() * noOfColumns);
-        const newLetter = {
-            letter: letter,
-            moving: true,
-            isWord: false,
-            pos: {
-                x: columnno,
-                y: 0
-            }
-        }
-        this.letters = [...this.letters, newLetter]
-        this.setState({ updateFlag: !this.state.updateFlag })
-    }
-
-    _getLetterForThisColumn = (column) => {
-        const _letterInColumn = []
-        for (let i = 0; i < this.letters.length; i++) {
-            if (this.letters[i].pos.x === column)
-                _letterInColumn.push(this.letters[i])
-        }
-        return _letterInColumn
-    }
-
-    _getColumn = () => {
-        let columns = []
-        for (let i = 0; i < noOfColumns; i++) {
-            const letter = this._getLetterForThisColumn(i)
-            columns.push(<BlockColumn key={`column${i}`} columnId={i} letters={letter} onLetterClick={this._onLetterClick} />)
-        }
-
-        return columns;
-    }
-
-    _onLetterClick = (letter) => {
-
-        this.letters.find(_l => {
-            if (_l && _l.pos.x === letter.pos.x && _l.pos.y === letter.pos.y) {
-                _l.isWord = !_l.isWord;
-
-                if (_l.isWord)
-                    this.wordQueue.push(letter);
-                else {
-                    //remove from wordQueue
-                    this.wordQueue.splice(this.wordQueue.findIndex(_l => _l && _l.pos.x === letter.pos.x && _l.pos.y === letter.pos.y), 1);
-                }
-            };
-            return null;
-        })
-
-        this.setState({ updateFlag: !this.state.updateFlag })
-
-
-        //check word automatically 
-        clearTimeout(this.checkWordAutomatic)
-        this.checkWordAutomatic = setTimeout(this._checkWordAndDestroy, checkWordTime)
-
-    }
-
-    _checkWordAndDestroy = () => {
-        const { wordQueue, letters } = checkWordAndDestroy({
-            letters: this.letters,
-            wordQueue: this.wordQueue,
-            toggleUpdateFlag: this.toggleUpdateFlag,
-            score: this.state.score,
-            updateScore: this.updateScore,
-            wordBank,
-        });
-        this.wordQueue = wordQueue;
-        this.letters = letters;
-    };
-
-    render() {
-        return (
-            <div className={css(styles.container)} >
-                <div className={css(styles.scoreLine)}>
-                    <div className={css(styles.score)}> {`Best : ${getHighScore()}`} </div>
-                    <div className={css(styles.score)}> {`Score : ${this.state.score}`} </div>
-                    {this.nextLetter && <div className={css(styles.score)}> {`Next : ${this.nextLetter.toUpperCase()}`} </div>}
-                </div>
-                {this.gameState !== GAMESTATE.ENDED &&
-                    <div className={css(styles.gameContainer)}>
-                        {this._getColumn()}
-                    </div>
-                }
-                {this.gameState === GAMESTATE.ENDED &&
-                    <GameOver score={this.state.score} />
-                }
-                <div className={css(styles.controlContainer)}>
-                    {this.gameState !== GAMESTATE.IN_PROGRESS &&
-                        <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={this._startGame}> {this.letters.length > 0 ? "Resume" : "Start"}</Button>}
-                    {this.gameState !== GAMESTATE.PAUSED && this.gameState === GAMESTATE.IN_PROGRESS &&
-                        <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={this._pauseGame}> Pause</Button>}
-                    {this.wordQueue.length > 0 &&
-                        <Button variant="contained" size="small" color="primary" className={css([styles.buttons, styles.destroyColor])} onClick={this._checkWordAndDestroy}> Destroy</Button>}
-                    {this.gameState !== GAMESTATE.PAUSED && this.gameState === GAMESTATE.IN_PROGRESS &&
-                        <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={this._moveLeft}><LeftIcon /></Button>}
-                    {this.gameState !== GAMESTATE.PAUSED && this.gameState === GAMESTATE.IN_PROGRESS &&
-                        <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={this._moveDown}><DownIcon /></Button>}
-                    {this.gameState !== GAMESTATE.PAUSED && this.gameState === GAMESTATE.IN_PROGRESS &&
-                        <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={this._moveRight}><RightIcon /></Button>}
-                </div>
-                <About score={this.state.score} wordBank={wordBank} />
-            </div>
-        );
-    }
-}
-
-
-export default Game
-
-
+export default Game;                
+                
