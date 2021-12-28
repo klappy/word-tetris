@@ -25,7 +25,7 @@ function Game () {
   const initialState = {
     score: 0,
     status: GAMESTATE.INITIAL,
-    wordBank: randomEnglishWordsOfLength({count: 1, minLength: 3, maxLength: 3}),
+    wordBank: randomEnglishWordsOfLength({count: 2, minLength: 3, maxLength: 4}),
   };
   const [state, setState] = useState(initialState);
   const [tick, setTick] = useState(false);
