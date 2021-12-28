@@ -1,70 +1,56 @@
 
-export const onKeyPress = ({evt, letters, onLetters, alreadyHasLetterInPos, noOfColumns, numberOfRows}) => {
-  if (evt.key === "a" || evt.keyCode === 37) {
+export const onKeyPress = ({ evt, onDirection }) => {
+  if (evt.key === "a" || evt.keyCode === 37) { //move left
     evt.preventDefault();
-    //move left
-    moveLeft({
-      letters,
-      onLetters,
-      alreadyHasLetterInPos,
-    });
-  } else if (evt.key === "d" || evt.keyCode === 39) {
+    onDirection('left');
+  } else if (evt.key === "d" || evt.keyCode === 39) { //move right
     evt.preventDefault();
-    //move right
-    moveRight({
-      letters,
-      onLetters,
-      alreadyHasLetterInPos,
-      noOfColumns,
-    })
-  } else if (evt.key === "s" || evt.keyCode === 40) {
+    onDirection('right');
+  } else if (evt.key === "s" || evt.keyCode === 40) { //move right
     evt.preventDefault();
-    //move right
-    moveDown({
-      letters,
-      onLetters,
-      alreadyHasLetterInPos,
-      numberOfRows,
-    })
-  }
+    onDirection('down');
+  };
 };
 
-export const moveLeft = ({letters: _letters, onLetters, alreadyHasLetterInPos}) => {
-  let letters = _letters;
+export const moveLeft = ({letters: _letters, onMove, alreadyHasLetterInPos, verbose}) => {
+  let letters = [..._letters];
   for (let i = 0; i < letters.length; i++) {
     if (letters[i].moving) {
       if (letters[i].pos.x > 0 && !alreadyHasLetterInPos({ x: letters[i].pos.x - 1, y: letters[i].pos.y })) {
         letters[i].pos.x = letters[i].pos.x - 1;
+        if (verbose) console.log('<< moveLeft()\n');
       };
     };
   };
-  onLetters(letters);
+  onMove(letters);
 };
 
-export const moveRight = ({letters: _letters, onLetters, alreadyHasLetterInPos, noOfColumns}) => {
-  let letters = _letters;
+export const moveRight = ({letters: _letters, onMove, alreadyHasLetterInPos, noOfColumns, verbose}) => {
+  let letters = [..._letters];
   for (let i = 0; i < letters.length; i++) {
     if (letters[i].moving) {
       if (letters[i].pos.x < noOfColumns - 1 && !alreadyHasLetterInPos({ x: letters[i].pos.x + 1, y: letters[i].pos.y })) {
         letters[i].pos.x = letters[i].pos.x + 1;
+        if (verbose) console.log('>> moveRight()\n');
       };
     };
   };
-  onLetters(letters);
+  onMove(letters);
 };
 
-export const moveDown = ({letters: _letters, onLetters, alreadyHasLetterInPos, numberOfRows}) => {
-  let letters = _letters;
+export const moveDown = ({letters: _letters, onMove, alreadyHasLetterInPos, numberOfRows, verbose}) => {
+  let letters = [..._letters];
   for (let i = 0; i < letters.length; i++) {
     if (letters[i].moving) {
       const alreadyHas = alreadyHasLetterInPos({ x: letters[i].pos.x, y: letters[i].pos.y + 1 });
       if (letters[i].pos.y < numberOfRows - 1 && !alreadyHas) {
         letters[i].pos.y = letters[i].pos.y + 1;
+        if (verbose) console.log('VV moveDown()\n');
       };
       if (letters[i].pos.y === numberOfRows - 1 || alreadyHas) {
         letters[i].moving = false;
       };
     };
   };
-  onLetters(letters);
+  onMove(letters);
 };

@@ -66,8 +66,8 @@ export default class Block extends Component {
         return (
             <Button variant="outlined" className={css(styles.container)} style={fillerStyle} onClick={this._onBlockClick}>
                 <div className={css(styles.buttonContent)}>
-                    {letter && <span className={css(styles.mainText)}>{letter.letter}</span>}
-                    {process.env.NODE_ENV !== 'production' && <span className={css(styles.subText)} > {pos.x + "," + pos.y}</span >}
+                    {letter && <span className={css(styles.mainText)}>{letter.character}</span>}
+                    {/* {process.env.NODE_ENV !== 'production' && <span className={css(styles.subText)} > {pos.x + "," + pos.y}</span >} */}
                 </div>
             </Button >
         );

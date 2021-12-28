@@ -2,17 +2,19 @@ import { sortWordQueue } from "../config/wordCheck";
 import { scoreForThisWord } from "../config/SaveScore";
 import { checkWord } from "./randomWords";
 
-export const checkWordAndDestroy = ({letters, wordQueue, score, updateScore, wordBank}) => {
+export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, score, updateScore, wordBank}) => {
+  let letters = [..._letters];
+  let wordQueue = [..._wordQueue];
   if (wordQueue.length > 0) {
     wordQueue = sortWordQueue(wordQueue);
     //check its proper selected // in sequence
     // row check 
-    let wordIsInRow = true;
-    let wordIsInColumn = true;
+    let wordIsInRow = false;
+    let wordIsInColumn = false;
     if (wordQueue.length > 1) {
       for (let i = 0; i < wordQueue.length - 1; i++) {
-        if (Math.abs(wordQueue[i].pos.x - wordQueue[i + 1].pos.x) !== 1) {
-          wordIsInRow = false;
+        if (Math.abs(wordQueue[i].pos.x - wordQueue[i + 1].pos.x) === 1) {
+          wordIsInRow = true;
         };
       };
     };
@@ -20,15 +22,14 @@ export const checkWordAndDestroy = ({letters, wordQueue, score, updateScore, wor
     if (!wordIsInRow) {
       // if not in row then only we will check for column
       for (let i = 0; i < wordQueue.length - 1; i++) {
-        if (Math.abs(wordQueue[i].pos.y - wordQueue[i + 1].pos.y) !== 1) {
-          wordIsInColumn = false;
+        if (Math.abs(wordQueue[i].pos.y - wordQueue[i + 1].pos.y) === 1) {
+          wordIsInColumn = true;
         };
       };
     };
-    
     if (wordIsInRow || wordIsInColumn) {
       let word = "";
-      wordQueue.forEach(_w => word = word + _w.letter);
+      wordQueue.forEach(_w => word = word + _w.character);
       if (checkWord({words: wordBank, word: word.toLowerCase()})) {
         letters = foundValidWord({letters, wordQueue, word, score, updateScore, wordIsInRow, wordIsInColumn});
       } else if (checkWord({words: wordBank, word: word.toLowerCase().split("").reverse().join("")})) {
@@ -42,7 +43,8 @@ export const checkWordAndDestroy = ({letters, wordQueue, score, updateScore, wor
   return { wordQueue, letters };
 };
 
-export const foundValidWord = ({letters, wordQueue, word, score, updateScore, wordIsInRow, wordIsInColumn}) => {
+export const foundValidWord = ({letters: _letters, wordQueue, word, score, updateScore, wordIsInRow, wordIsInColumn}) => {
+  let letters = [..._letters];
   // valid word
   letters = letters.filter(_letter => {
     const _letterInWordQueue = wordQueue.find(_wl => (_wl.pos.x === _letter.pos.x && _wl.pos.y === _letter.pos.y))
