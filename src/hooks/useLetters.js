@@ -173,6 +173,7 @@ function useLetters ({
     getLettersForColumn,
     onLetterClick,
     checkWordAndDestroy: _checkWordAndDestroy,
+    onDirection: setDirection,
   };
 };
 

@@ -15,7 +15,6 @@ import About from './About';
 
 import { randomEnglishWordsOfLength } from '../helpers/randomWords';
 import { gameStylesheet } from '../helpers/gameStylesheet';
-import { moveDown, moveLeft, moveRight } from '../helpers/keypress';
 
 import { GAMESTATE } from '../config/gameState';
 import useLetters from '../hooks/useLetters';
@@ -47,6 +46,7 @@ function Game () {
     getLettersForColumn,
     checkWordAndDestroy,
     onLetterClick,
+    onDirection,
   } = useLetters({
     wordBank: state.wordBank,
     tick,
@@ -57,7 +57,7 @@ function Game () {
     updateScore,
     endGame,
     checkWordTime,
-    verbose: true,
+    verbose: false,
   });
 
   useEffect(() => {
@@ -123,9 +123,9 @@ function Game () {
       {state.status !== GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={startGame}> {letters.length > 0 ? "Resume" : "Start"}</Button>}
       {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={pauseGame}> Pause</Button>}
       {wordQueue.length > 0 && <Button variant="contained" size="small" color="primary" className={css([styles.buttons, styles.destroyColor])} onClick={checkWordAndDestroy}> Destroy</Button>}
-      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={moveLeft}><LeftIcon /></Button>}
-      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={moveDown}><DownIcon /></Button>}
-      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={moveRight}><RightIcon /></Button>}
+      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('left')}}><LeftIcon /></Button>}
+      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('down')}}><DownIcon /></Button>}
+      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('right')}}><RightIcon /></Button>}
     </div>
   );
   const aboutComponent = (<About score={state.score} wordBank={state.wordBank} />);
