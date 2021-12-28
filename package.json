@@ -1,8 +1,8 @@
 {
-  "name": "word-tetris",
-  "version": "0.1.0",
+  "name": "wordris",
+  "version": "1.0.0",
   "private": false,
-  "homepage": "https://AbhishekCode.github.io/word-tetris",
+  "homepage": "https://wordris.netlify.app/",
   "dependencies": {
     "@material-ui/core": "^1.3.0",
     "@material-ui/icons": "^1.1.0",
