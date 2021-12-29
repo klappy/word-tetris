@@ -9,7 +9,6 @@ import DownIcon from '@material-ui/icons/ArrowDownward';
 
 import BlockColumn from './Column'
 import { noOfColumns, numberOfRows, moveTime, checkWordTime } from '../config/config'
-import { saveHighScore, getHighScore } from '../config/SaveScore';
 import GameOver from './GameOver';
 import About from './About';
 
@@ -18,20 +17,22 @@ import { gameStylesheet } from '../helpers/gameStylesheet';
 
 import { GAMESTATE } from '../config/gameState';
 import useLetters from '../hooks/useLetters';
+import useScore from '../hooks/useScore';
+import useHighScore from '../hooks/useHighScore';
 
 const styles = gameStylesheet;
 
 function Game () {
   const initialState = {
-    score: 0,
     status: GAMESTATE.INITIAL,
     wordBank: randomEnglishWordsOfLength({count: 2, minLength: 3, maxLength: 4}),
   };
   const [state, setState] = useState(initialState);
   const [tick, setTick] = useState(false);
   const [gameInterval, setGameInterval] = useState();
-  
-  const updateScore = (score) => { setState({ ...state, score }); };
+
+  const { score, addScore, resetScore } = useScore();
+  const { highScore } = useHighScore({ score });
 
   const endGame = () => { setState({ ...state, status: GAMESTATE.ENDED }); };
 
@@ -53,8 +54,8 @@ function Game () {
     onTick,
     noOfColumns,
     numberOfRows,
-    score: state.score,
-    updateScore,
+    score,
+    addScore,
     endGame,
     checkWordTime,
     verbose: false,
@@ -62,7 +63,6 @@ function Game () {
 
   useEffect(() => {
     if (state.status === GAMESTATE.ENDED) {
-      saveHighScore(score);
       clearInterval(gameInterval);
       clearLetters();
     };
@@ -75,17 +75,16 @@ function Game () {
   }, [gameInterval, moveTime]);
 
   const startGame = useDeepCompareCallback(() => {
-    let score = (state.status !== GAMESTATE.PAUSED) ? 0 : state.score;
-    let status = GAMESTATE.IN_PROGRESS;
+    if (state.status !== GAMESTATE.PAUSED) resetScore();
     if (letters.length === 0) useNextLetter();
-    setState({ ...state, score, status });
+    let status = GAMESTATE.IN_PROGRESS;
+    setState({ ...state, status });
     startMoving();
   }, [state, startMoving, useNextLetter]);
     
   const pauseGame = () => {
     const status = GAMESTATE.PAUSED;
     clearInterval(gameInterval);
-    saveHighScore(state.score); //just save
     setState({ ...state, status });
   };
   
@@ -107,15 +106,15 @@ function Game () {
 
   const scoreComponent = (
     <div className={css(styles.scoreLine)}>
-      <div className={css(styles.score)}> {`Best : ${getHighScore()}`} </div>
-      <div className={css(styles.score)}> {`Score : ${state.score}`} </div>
+      <div className={css(styles.score)}> {`Best : ${highScore}`} </div>
+      <div className={css(styles.score)}> {`Score : ${score}`} </div>
       {nextLetter?.character && <div className={css(styles.score)}> {`Next : ${nextLetter?.character.toUpperCase()}`} </div>}
     </div>
   );
   const boardComponent = (
     <>
       {state.status !== GAMESTATE.ENDED && <div className={css(styles.gameContainer)}>{getColumns()}</div>}
-      {state.status === GAMESTATE.ENDED && <GameOver score={state.score} />}
+      {state.status === GAMESTATE.ENDED && <GameOver score={score} />}
     </>
   );
   const controlsComponent = (
@@ -128,7 +127,7 @@ function Game () {
       {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('right')}}><RightIcon /></Button>}
     </div>
   );
-  const aboutComponent = (<About score={state.score} wordBank={state.wordBank} />);
+  const aboutComponent = (<About score={score} highScore={highScore} wordBank={state.wordBank} />);
   
   return (
     <div className={css(styles.container)} >

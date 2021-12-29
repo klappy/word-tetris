@@ -9,7 +9,7 @@ export const saveHighScore = (score) => {
     }
 }
 
-export const getHighScore = () => {
+export const readHighScore = () => {
     const savedHighScore = localStorage.getItem(HIGH_SCORE_KEY)
     if (savedHighScore)
         return savedHighScore;

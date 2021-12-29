@@ -2,7 +2,7 @@ import { sortWordQueue } from "../config/wordCheck";
 import { scoreForThisWord } from "../config/SaveScore";
 import { checkWord } from "./randomWords";
 
-export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, score, updateScore, wordBank}) => {
+export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, score, addScore, wordBank}) => {
   let letters = [..._letters];
   let wordQueue = [..._wordQueue];
   if (wordQueue.length > 0) {
@@ -31,10 +31,10 @@ export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, s
       let word = "";
       wordQueue.forEach(_w => word = word + _w.character);
       if (checkWord({words: wordBank, word: word.toLowerCase()})) {
-        letters = foundValidWord({letters, wordQueue, word, score, updateScore, wordIsInRow, wordIsInColumn});
+        letters = foundValidWord({letters, wordQueue, word, score, addScore, wordIsInRow, wordIsInColumn});
       } else if (checkWord({words: wordBank, word: word.toLowerCase().split("").reverse().join("")})) {
         // check reverse word as well
-        letters = foundValidWord({letters, wordQueue, word, score, updateScore, wordIsInRow, wordIsInColumn});
+        letters = foundValidWord({letters, wordQueue, word, score, addScore, wordIsInRow, wordIsInColumn});
       };
     };
     wordQueue = [];
@@ -43,7 +43,7 @@ export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, s
   return { wordQueue, letters };
 };
 
-export const foundValidWord = ({letters: _letters, wordQueue, word, score, updateScore, wordIsInRow, wordIsInColumn}) => {
+export const foundValidWord = ({letters: _letters, wordQueue, word, score, addScore, wordIsInRow, wordIsInColumn}) => {
   let letters = [..._letters];
   // valid word
   letters = letters.filter(_letter => {
@@ -70,7 +70,7 @@ export const foundValidWord = ({letters: _letters, wordQueue, word, score, updat
     });
   };
 
-  updateScore(newScore);
+  addScore(newScore);
 
   return letters;
 };

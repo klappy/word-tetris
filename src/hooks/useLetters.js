@@ -12,7 +12,7 @@ function useLetters ({
   noOfColumns,
   numberOfRows,
   score,
-  updateScore,
+  addScore,
   endGame,
   checkWordTime,
   verbose,
@@ -104,12 +104,12 @@ function useLetters ({
       letters: state.letters,
       wordQueue: state.wordQueue,
       score,
-      updateScore,
+      addScore,
       wordBank,
     });
     if (verbose) console.log('useLetters._checkWordAndDestroy(): ', letters);
     setState({ ...state, wordQueue, letters });
-  }, [updateScore, state]);
+  }, [addScore, state]);
 
   const onLetterClick = useDeepCompareCallback((letter) => {
     let wordQueue = [...state.wordQueue];
@@ -134,7 +134,7 @@ function useLetters ({
   }, [state, _checkWordAndDestroy, checkWordTime]);
 
   const onDirection = useCallback((_direction) => {
-    console.log('useLetters.onDirection(\''+_direction+'\')');
+    if (verbose) console.log('useLetters.onDirection(\''+_direction+'\')');
     setDirection(_direction);
   }, []);
 
