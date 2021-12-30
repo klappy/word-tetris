@@ -15,28 +15,24 @@ import About from './About';
 import { randomEnglishWordsOfLength } from '../helpers/randomWords';
 import { gameStylesheet } from '../helpers/gameStylesheet';
 
-import { GAMESTATE } from '../config/gameState';
 import useLetters from '../hooks/useLetters';
 import useScore from '../hooks/useScore';
 import useHighScore from '../hooks/useHighScore';
+import useGameClock from '../hooks/useGameClock';
+import useGameStatus from '../hooks/useGameStatus';
 
 const styles = gameStylesheet;
 
 function Game () {
   const initialState = {
-    status: GAMESTATE.INITIAL,
     wordBank: randomEnglishWordsOfLength({count: 2, minLength: 3, maxLength: 4}),
   };
   const [state, setState] = useState(initialState);
-  const [tick, setTick] = useState(false);
-  const [gameInterval, setGameInterval] = useState();
 
+  const { status, start, pause, end, reset, ready, started, paused, ended } = useGameStatus();
+  const { tick, onTick } = useGameClock({ status, moveTime });
   const { score, addScore, resetScore } = useScore();
   const { highScore } = useHighScore({ score });
-
-  const endGame = () => { setState({ ...state, status: GAMESTATE.ENDED }); };
-
-  const onTick = () => { setTick(false); };
 
   const {
     letters,
@@ -56,37 +52,18 @@ function Game () {
     numberOfRows,
     score,
     addScore,
-    endGame,
+    endGame: end,
     checkWordTime,
     verbose: false,
   });
 
-  useEffect(() => {
-    if (state.status === GAMESTATE.ENDED) {
-      clearInterval(gameInterval);
-      clearLetters();
-    };
-  }, [state.status]);
-
-  const startMoving = useCallback(() => {
-    clearInterval(gameInterval);
-    const _gameInterval = setInterval(() => { setTick(true); }, moveTime);
-    setGameInterval(_gameInterval);
-  }, [gameInterval, moveTime]);
+  useEffect(() => { if (ended) clearLetters(); }, [ended, clearLetters]);
 
   const startGame = useDeepCompareCallback(() => {
-    if (state.status !== GAMESTATE.PAUSED) resetScore();
+    if (!paused) resetScore();
     if (letters.length === 0) useNextLetter();
-    let status = GAMESTATE.IN_PROGRESS;
-    setState({ ...state, status });
-    startMoving();
-  }, [state, startMoving, useNextLetter]);
-    
-  const pauseGame = () => {
-    const status = GAMESTATE.PAUSED;
-    clearInterval(gameInterval);
-    setState({ ...state, status });
-  };
+    start();
+  }, [state, resetScore, useNextLetter]);
   
   const getColumns = useDeepCompareCallback(() => {
     let columns = [];
@@ -113,18 +90,18 @@ function Game () {
   );
   const boardComponent = (
     <>
-      {state.status !== GAMESTATE.ENDED && <div className={css(styles.gameContainer)}>{getColumns()}</div>}
-      {state.status === GAMESTATE.ENDED && <GameOver score={score} />}
+      {!ended && <div className={css(styles.gameContainer)}>{getColumns()}</div>}
+      {ended && <GameOver score={score} highScore={highScore} />}
     </>
   );
   const controlsComponent = (
     <div className={css(styles.controlContainer)}>
-      {state.status !== GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={startGame}> {letters.length > 0 ? "Resume" : "Start"}</Button>}
-      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={pauseGame}> Pause</Button>}
+      {!started && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={start}> {letters.length > 0 ? "Resume" : "Start"}</Button>}
+      {started && <Button variant="contained" size="small" color="secondary" className={css(styles.buttons)} onClick={pause}> Pause</Button>}
       {wordQueue.length > 0 && <Button variant="contained" size="small" color="primary" className={css([styles.buttons, styles.destroyColor])} onClick={checkWordAndDestroy}> Destroy</Button>}
-      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('left')}}><LeftIcon /></Button>}
-      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('down')}}><DownIcon /></Button>}
-      {state.status === GAMESTATE.IN_PROGRESS && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('right')}}><RightIcon /></Button>}
+      {started && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('left')}}><LeftIcon /></Button>}
+      {started && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('down')}}><DownIcon /></Button>}
+      {started && <Button variant="contained" size="small" color="primary" className={css(styles.buttons)} onClick={() => {onDirection('right')}}><RightIcon /></Button>}
     </div>
   );
   const aboutComponent = (<About score={score} highScore={highScore} wordBank={state.wordBank} />);
