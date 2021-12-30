@@ -1,8 +1,7 @@
-import { sortWordQueue } from "../config/wordCheck";
-import { scoreForThisWord } from "../config/SaveScore";
-import { checkWord } from "./randomWords";
+import { sortWordQueue } from "./sortLetters";
+import { scoreWord } from "./scoreWord";
 
-export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, score, addScore, wordBank}) => {
+export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, score, addScore, wordBank, onValidWord, verbose }) => {
   let letters = [..._letters];
   let wordQueue = [..._wordQueue];
   if (wordQueue.length > 0) {
@@ -30,10 +29,9 @@ export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, s
     if (wordIsInRow || wordIsInColumn) {
       let word = "";
       wordQueue.forEach(_w => word = word + _w.character);
-      if (checkWord({words: wordBank, word: word.toLowerCase()})) {
-        letters = foundValidWord({letters, wordQueue, word, score, addScore, wordIsInRow, wordIsInColumn});
-      } else if (checkWord({words: wordBank, word: word.toLowerCase().split("").reverse().join("")})) {
-        // check reverse word as well
+      if (verbose) console.log('checkWordAndDestroy() word:', word);
+      if (checkWord({words: wordBank, word: word})) {
+        onValidWord(word);
         letters = foundValidWord({letters, wordQueue, word, score, addScore, wordIsInRow, wordIsInColumn});
       };
     };
@@ -43,7 +41,16 @@ export const checkWordAndDestroy = ({letters: _letters, wordQueue: _wordQueue, s
   return { wordQueue, letters };
 };
 
-export const foundValidWord = ({letters: _letters, wordQueue, word, score, addScore, wordIsInRow, wordIsInColumn}) => {
+export const checkWord = ({words, word: _word, verbose}) => {
+  let word = _word.toLowerCase();
+  let found = false;
+  if ( words.some(w => w == word) ) found = true;
+  if ( words.some(w => w == word.split("").reverse().join("")) ) found = true;
+  if (verbose) console.log('checkWord(): ', word, found);
+  return found;
+};
+
+export const foundValidWord = ({letters: _letters, wordQueue, word, addScore, wordIsInRow, wordIsInColumn}) => {
   let letters = [..._letters];
   // valid word
   letters = letters.filter(_letter => {
@@ -51,7 +58,7 @@ export const foundValidWord = ({letters: _letters, wordQueue, word, score, addSc
     if (_letterInWordQueue) return false;
     return true;
   });
-  const newScore = score + scoreForThisWord(word.length);
+  const wordScore = scoreWord(word);
 
   //fill empty space left by destroyed letters
   if (wordIsInRow) {
@@ -70,7 +77,7 @@ export const foundValidWord = ({letters: _letters, wordQueue, word, score, addSc
     });
   };
 
-  addScore(newScore);
+  addScore(wordScore);
 
   return letters;
 };

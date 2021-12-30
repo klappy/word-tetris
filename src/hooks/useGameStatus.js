@@ -1,5 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
-import { GAMESTATE } from '../config/gameState';
+
+export const GAMESTATE = {
+  INITIAL: 'initial',
+  IN_PROGRESS: 'inProgress',
+  PAUSED: 'paused',
+  ENDED: 'ended',
+};
 
 function useGameStatus () {
   const { INITIAL, IN_PROGRESS, PAUSED, ENDED } = GAMESTATE;

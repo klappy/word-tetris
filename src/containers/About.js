@@ -1,43 +1,31 @@
-
-
 import React, { Component } from 'react';
 import { StyleSheet, css } from 'aphrodite';
-import Button from '@material-ui/core/Button';
 
 const styles = StyleSheet.create({
-    container: {
-        display: 'flex',
-        flex: 1,
-        flexDirection: 'column',
-        textAlign: 'center',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+  container: {
+    display: 'flex',
+    flex: 1,
+    flexDirection: 'column',
+    textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
-export default class About extends Component {
+function About ({score, highScore, wordBank}) {
+  return (
+    <div className={css(styles.container)}>
+      <h3>{`Score : ${score}`}</h3>
+      <h3>Words: {wordBank.join(', ').toUpperCase()}</h3>
+      <h3>{`High Score: ${highScore}`}</h3>
+      
+      <h4>Gameplay</h4>
+      <p>Destroy words in the word bank by dropping letters in order to make the word vertically or horizontally, forward or reverse.</p>
+      <p>Select letters of the word and if it is a valid word in the word bank then it will disappear.</p>
+      <h4>Check out github repo here</h4>
+      <a className="github-button" href="https://github.com/klappy/wordris" data-size="large" data-show-count="true" aria-label="Star klappy/wordris on GitHub">Github Repo</a>
+    </div>
+  );
+};
 
-    render() {
-
-        return (
-            <div className={css(styles.container)}>
-                <h3>{`Score : ${this.props.score}`}</h3>
-                <h3>Words: {this.props.wordBank.join(', ').toUpperCase()}</h3>
-                <h3>{`High Score: ${this.props.highScore}`}</h3>
-
-                <h4>How To play?</h4>
-                <div>Make words using letters</div>
-                <div>Select letters by clicking and then click destroy button(leave it for 2 second it wil happen automatically), if it is a valid word then it will disappear</div>
-                <Button href="https://www.youtube.com/watch?v=qvoL5J-jsFA&feature=youtu.be">
-                    Here is game play video.
-                </Button>
-                <h4>Check out github repo here</h4>
-                <a className="github-button" href="https://github.com/abhishekcode/word-tetris" data-size="large" data-show-count="true" aria-label="Star abhishekcode/word-tetris on GitHub">Github Repo</a>
-            </div>
-        );
-    }
-}
-
-
-
-
+export default About;

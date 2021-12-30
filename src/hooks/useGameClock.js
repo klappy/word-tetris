@@ -1,26 +1,29 @@
 import { useState, useEffect, } from "react";
-import { GAMESTATE } from "../config/gameState";
 
-function useGameClock ({status, moveTime}) {
+function useGameClock ({ready, started, paused, ended, moveTime}) {
   const [tick, setTick] = useState(false);
   const [gameInterval, setGameInterval] = useState();
 
   const onTick = () => { setTick(false); };
   
   useEffect(() => {
-    if (status === GAMESTATE.ENDED) clearInterval(gameInterval);
-  }, [status]);
+    if (ended) clearInterval(gameInterval);
+  }, [ended]);
 
   useEffect(() => {
-    if (status === GAMESTATE.IN_PROGRESS) {
+    if (started) {
       clearInterval(gameInterval);
       const _gameInterval = setInterval(() => { setTick(true); }, moveTime);
       setGameInterval(_gameInterval);
-    } else if (status === GAMESTATE.PAUSED) {
+    };
+  }, [started]); // if status changes, set the game interval
+
+  useEffect(() => {
+    if (paused) {
       clearInterval(gameInterval);
       onTick(); // unset the tick asap
     };
-  }, [status]); // if status changes, set the game interval
+  }, [paused]); // if status changes, set the game interval
 
   return {
     tick,

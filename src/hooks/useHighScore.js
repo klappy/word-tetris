@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { readHighScore, saveHighScore } from '../config/SaveScore';
+import { readHighScore, saveHighScore } from '../helpers/highScoreStorage';
 
 function useHighScore ({score}) {
   const [highScore, setHighScore] = useState();

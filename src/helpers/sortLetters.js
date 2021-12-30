@@ -1,11 +1,7 @@
 
-import words from 'an-array-of-english-words';
-
-export const checkWord = (_wordToCheck) => words.indexOf(_wordToCheck) > -1;
-
 export const sortWordQueue = (wordQueue) => {
-    wordQueue.sort((a, b) => b.pos.x - a.pos.x);
-    wordQueue.sort((a, b) => b.pos.y - a.pos.y);
+    wordQueue.sort((a, b) => a.pos.x - b.pos.x);
+    wordQueue.sort((a, b) => a.pos.y - b.pos.y);
     return wordQueue;
 }
 

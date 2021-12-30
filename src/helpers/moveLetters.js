@@ -1,5 +1,3 @@
-import { GAMESTATE } from "../config/gameState";
-
 export const moveLetters = ({
   onTick,
   letters: _letters,

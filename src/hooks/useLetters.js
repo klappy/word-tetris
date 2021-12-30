@@ -7,11 +7,11 @@ import { randomCharacterFromWords } from '../helpers/randomCharacter';
 
 function useLetters ({
   wordBank,
+  onValidWord: _onValidWord,
   tick,
   onTick,
   noOfColumns,
   numberOfRows,
-  score,
   addScore,
   endGame,
   checkWordTime,
@@ -28,8 +28,11 @@ function useLetters ({
   const [autoCheck, setAutoCheck] = useState();
 
   const onLetters = useDeepCompareCallback((letters) => { setState({ ...state, letters }); }, [state]);
-
   const clearLetters = useDeepCompareCallback(() => { setState({ ...state, letters: [] }); }, [state]);
+  const onValidWord = useDeepCompareCallback((word) => {
+    _onValidWord(word);
+    setState({ ...state, nextLetter: undefined }); 
+  }, [state]);
 
   const newLetter = useCallback(({ character }) => {
     const columnNumber = Math.floor(Math.random() * noOfColumns);
@@ -43,10 +46,12 @@ function useLetters ({
   }, [noOfColumns]);
 
   const generateNextLetter = useDeepCompareCallback(() => {
-    const character = randomCharacterFromWords({words: wordBank});
-    const nextLetter = newLetter({ character });
-    if (verbose) console.log('useLetter.generateNextLetter()', nextLetter);
-    setState({ ...state, nextLetter });
+    if (wordBank.length) {
+      const character = randomCharacterFromWords({words: wordBank});
+      const nextLetter = newLetter({ character });
+      if (verbose) console.log('useLetter.generateNextLetter()', nextLetter);
+      setState({ ...state, nextLetter });
+    };
   }, [state, wordBank, noOfColumns]);
 
   useDeepCompareEffect(() => {
@@ -57,19 +62,24 @@ function useLetters ({
   }, [state.nextLetter, generateNextLetter]);
 
   const useNextLetter = useDeepCompareCallback(() => {
-    const letter = state.nextLetter;
-    const letters = [...state.letters, letter];
-    if (verbose) console.log('useLetter.useNextLetter()', letter, letters.length);
-    setState({ ...state, letters, nextLetter: undefined });
+    if (state.nextLetter) {
+      const letter = state.nextLetter;
+      const letters = [...state.letters, letter];
+      if (verbose) console.log('useLetter.useNextLetter()', letter, letters.length);
+      setState({ ...state, letters, nextLetter: undefined });
+    };
   }, [state.letters, state.nextLetter]);
 
-  const alreadyHasLetterInPos = useDeepCompareCallback((pos) => {
-    for (let i = 0; i < state.letters.length; i++) {
-      if (state.letters[i].pos.x === pos.x && state.letters[i].pos.y === pos.y) {
-        return true;
-      };
-    };
-    return false;
+  useDeepCompareEffect(() => {
+    if (state.letters.length === 0) useNextLetter();
+  }, [state.letters]);
+
+  const alreadyHasLetterInPos = useDeepCompareCallback(({ x,y }) => {
+    let taken = false;
+    state.letters.forEach(letter => {
+      if (letter.pos.x === x && letter.pos.y === y) taken = true;
+    });
+    return taken;
   }, [state.letters]);
 
   const _moveLetters = useDeepCompareCallback(() => {
@@ -93,9 +103,10 @@ function useLetters ({
   const getLettersForColumn = useDeepCompareCallback((column) => {
     const { letters } = state;
     const lettersInColumn = [];
-    for (let i = 0; i < letters.length; i++) {
-      if (letters[i].pos.x === column) lettersInColumn.push(letters[i]);
-    };
+    letters.forEach(letter => {
+      if (letter.pos.x === column) lettersInColumn.push(letter);
+    });
+
     return lettersInColumn;
   }, [state.letters]);
 
@@ -103,13 +114,14 @@ function useLetters ({
     const { wordQueue, letters } = checkWordAndDestroy({
       letters: state.letters,
       wordQueue: state.wordQueue,
-      score,
       addScore,
       wordBank,
+      onValidWord,
+      verbose,
     });
     if (verbose) console.log('useLetters._checkWordAndDestroy(): ', letters);
     setState({ ...state, wordQueue, letters });
-  }, [addScore, state]);
+  }, [addScore, state, wordBank, onValidWord, verbose]);
 
   const onLetterClick = useDeepCompareCallback((letter) => {
     let wordQueue = [...state.wordQueue];

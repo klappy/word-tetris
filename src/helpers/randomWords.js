@@ -1,7 +1,5 @@
 import englishWords from 'an-array-of-english-words';
 
-export const checkWord = ({words, word}) => words.indexOf(word) > -1;
-
 export const randomNumber = ({maxNumber}) => Math.floor(Math.random() * maxNumber);
 
 export const randomWords = ({words, count=5}) => {
