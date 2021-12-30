@@ -30,8 +30,8 @@ function useLetters ({
   const onLetters = useDeepCompareCallback((letters) => { setState({ ...state, letters }); }, [state]);
   const clearLetters = useDeepCompareCallback(() => { setState({ ...state, letters: [] }); }, [state]);
   const onValidWord = useDeepCompareCallback((word) => {
-    _onValidWord(word);
     setState({ ...state, nextLetter: undefined }); 
+    _onValidWord(word);
   }, [state]);
 
   const newLetter = useCallback(({ character }) => {

@@ -1,4 +1,4 @@
-const HIGH_SCORE_KEY = "highScore";
+const HIGH_SCORE_KEY = 'high-score';
 
 export const saveHighScore = (score) => {
   localStorage.setItem(HIGH_SCORE_KEY, score);

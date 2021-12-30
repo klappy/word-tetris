@@ -7,9 +7,9 @@ import LeftIcon from '@material-ui/icons/ArrowBack';
 import RightIcon from '@material-ui/icons/ArrowForward';
 import DownIcon from '@material-ui/icons/ArrowDownward';
 
-import BlockColumn from './Column'
+import BlockColumn from '../containers/Column'
 import { noOfColumns, numberOfRows, moveTime, checkWordTime } from '../config/config'
-import GameOver from './GameOver';
+import GameOver from '../containers/GameOver';
 import About from './About';
 
 import { gameStylesheet } from '../helpers/gameStylesheet';
